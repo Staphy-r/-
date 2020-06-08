@@ -1,0 +1,436 @@
+package com.iccom;
+import java.util.Random;
+import java.util.Scanner;
+
+class Queue{
+	public Queue next;
+	public int data;
+	
+}
+class Queue_up{                       //队列类
+	private static final int SUCC=1;
+	private static final int FAIL=0;
+	private static final int MAX=8;
+	Scanner in=new Scanner(System.in);
+	private int lineLength;                   //队伍长度
+	private Queue last, first;               //首尾指针
+	private int tab;
+	private int repast;                        //就餐人数
+	private int number;                        //编号域,逐渐递增
+	private int VIP;                          //用来判断是否VIP
+	private int []table;
+	public void setrepast(int x){repast = x;}
+	public int getlineLength() { return lineLength; }
+	public void setlineLength(int x) { lineLength = x; }
+	//管理员函数:
+	
+	//查看就餐编号
+	public void display() 
+	{
+		System.out.print("<输出就餐客人的编号:");
+		for (int i = 0; i < MAX; i++)
+		{
+			System.out.print(table[i]+" ");
+		}
+		System.out.print(">");
+		System.out.println();
+	}           
+	//客人出餐馆*
+	public int OutRestaurant() 
+	{
+		int T = 1;
+		if (repast == 0)
+		{
+			System.out.println("<此时的餐馆并没有人，出餐馆操作有误>");
+			return FAIL;
+		}
+		if (0<repast &&repast<MAX&&first == last)                //餐馆不满人时，出餐馆，就餐人数直接-1
+		{
+			System.out.println("<就餐人数不满，而且其中一桌客人吃完走出餐馆！>");
+			int rand=new Random().nextInt();
+			int i = rand % repast;
+			while (T == 1)
+			{
+				if (table[i] == 0)
+				{
+					i = rand % 8;
+				}
+				else
+				{
+					table[i] = 0;
+					break;
+				}
+			}
+			repast--;
+			if (repast == 0)
+			{
+				System.out.println();
+				System.out.println("<就餐人数为0，餐馆内无人就餐>");
+			}
+		}
+		if (repast == MAX&&first == last)
+		{
+			System.out.println("<就餐人数不满，而且其中一桌客人吃完走出餐馆！>");
+			int rand=new Random().nextInt();
+			int i = rand % repast;
+			repast--;
+			table[i] = 0;
+		}
+		if (repast == MAX&&first != last)              //餐馆满人时，出餐馆就餐人数-1，队头出队，就餐人数+1
+		{
+			Queue p;
+			p = first;
+			if (first.data == 0 && first != last)           //当队伍中无VIP时，跳过表头结点0
+			{
+				p = p.next;
+			}
+			if (p.data != 0)           //队列里有人排队
+			{
+				System.out.println("<餐馆中的其中一桌客人吃完走出餐馆,队伍的第一个客人进餐馆>");
+				repast--;
+				if (repast < 8)
+				{
+					int rand=new Random().nextInt();
+					int i = rand % 8;
+					table[i] = p.data;
+				}
+				Deletequeue();
+				repast++;
+			}
+		}
+		return repast;
+	}   
+	//客人来到餐馆时*
+	public int InRestaurant() 
+	{
+		if (repast < MAX)               //当餐馆不满时，客人来到时候，就餐人数直接+1
+		{
+			System.out.println("<此时来了一名客人，就餐人数+1>");
+			repast++;
+			if (tab<8)
+			{
+				table[tab] = number;
+				number++;
+				tab++;
+				if (repast == 8)
+				{
+					System.out.println("<餐桌已满>");
+				}
+			}
+			else
+			{
+				for (int i = 0; i < 8; i++)
+				{
+					if (table[i] == 0)
+					{
+						table[i] = number;
+						number++;
+					}
+				}
+				if (repast == 8)
+				{
+					System.out.println("<餐桌已满>");
+				}
+			}
+		}
+		else               //当餐馆满人时，队列进行入队操作
+		{
+			System.out.print("请确认是否为VIP客户:");
+			VIP=in.nextInt();
+			if (VIP == 1)
+			{
+				Vippleplo();              //VIP进队
+			}
+			else if (VIP == 0)
+			{
+				Addqueue();
+			}
+			else {
+				System.out.println("<输入数据有误，请重新输入>");
+			}
+		}
+		return repast;
+	}             
+	//构造链表队列
+	public Queue_up()                        
+	{
+		first = last = new Queue();
+		last.next = first.next = null;
+		first.data = last.data = FAIL;
+		lineLength = FAIL;
+		tab = 0;
+		table=new int[MAX];
+	}    
+	//结束运营，清空就餐人数和队列
+	public void queue() {
+		Queue p;
+		System.out.println("<餐馆结束运营>");         
+		while (first != last)
+		{
+			p = first.next;
+			last = first;
+			last.next = first.next = null;
+			first.data = FAIL;
+			p=null;
+		}
+	}                     
+	public int Addqueue() 
+	{
+		Queue p;
+		System.out.println("<您的等候号码为："+number+",请您稍作等待!>");
+		p = new Queue();
+		p.data = number;
+		last.next = p;
+		last = p;
+		number++;
+		lineLength++;
+		return SUCC;
+	}                    
+	public int Deletequeue() 
+	{
+		Queue p;
+		if (first == last)return FAIL;
+		p = first;
+		if (p.data == 0)//如果没有VIP排队的情况
+		{
+			p = p.next;
+			if (p == last)
+			{
+				last = first;
+				p=null;
+			}
+			else
+			{
+				first.next = p.next;
+				p=null;
+			}
+			lineLength--;
+		}
+		else {
+			first = p.next;
+			lineLength--;
+			p=null;
+		}
+
+		return SUCC;
+	}                 
+	public int Vippleplo() 
+	{
+		Queue p, q, t;                 //p新结点，q，t移动，t的next始终为q
+		p = new Queue();
+		q = first;
+		t = first;
+		while (true)
+		{
+			if (q.data == 0)
+			{
+				p.next = first;
+				System.out.println("<您的等候号码为："+number+",请您稍作等待!>");
+				p.data = number;
+				first = p;
+				number++;
+				lineLength++;
+				break;
+			}
+			else
+			{
+				q = q.next;
+				if (q.data != 0)
+				{
+					t = t.next;
+				}
+
+				if (q.data == 0)
+				{
+					System.out.println("<您的等候号码为："+number+",请您稍作等待!>");
+					p.data = number;
+					p.next = q;
+					t.next = p;
+					lineLength++;
+					number++;
+					break;
+				}
+			}
+		}
+		return SUCC;
+	}      
+	//管理员查看队列
+	public void Queueshow() 
+	{
+		Queue p;
+		p = first;
+		System.out.print("<队列中排队的号码为：");
+		while (p != null)
+		{
+			if (p == last)
+			{
+				System.out.print(p.data);
+				break;
+			}
+			else
+			{
+				System.out.print(p.data+" ");
+				p = p.next;
+			}
+		}
+		System.out.print(">");
+		System.out.println();
+	} 
+	//查看队列长度
+	public void Showlen() 
+	{
+		int len = getlineLength();
+		System.out.println("<队伍的长度为："+len+">");
+	}                    
+		/*用户函数*/
+	//查看前面剩余多少位客人
+	public void CheckRanking() 
+	{
+		Queue p;
+		p = first;
+		int x, Ranking;
+		boolean i = true;
+		Ranking = 0;
+		System.out.print("请输入要查询的编号为：");
+		x=in.nextInt();
+		while (i)
+		{
+			if (p.data != x)
+			{
+				p = p.next;
+				if (p.data == 0) { continue; }
+				Ranking++;
+			}
+			if (p == last&&p.data != x)
+			{
+				System.out.println("<查询失败！>");
+				i = false;
+			}
+			if (p.data == x)
+			{
+				System.out.println("<您前面还有"+Ranking+"名客人在进行排队>");
+				i = false;
+			}
+		}
+	}               
+		 /*显示函数*/
+	//主界面函数
+	public void MainInteface() 
+	{
+		int op;
+		int i = 1;
+		while (i == 1)
+		{
+			System.out.println("=========================================================");
+			System.out.println("                 1:管理员入口");
+			System.out.println("                 2:用户入口");
+			System.out.println("                 3:退出程序");
+			System.out.println("=========================================================");
+			System.out.print("请输入要操作的代码：");
+			op=in.nextInt();
+			switch (op)
+			{
+			case 1:Manage();
+				break;
+			case 2:User();
+				break;
+			case 3:System.out.println("<程序结束！>");
+				break;
+			default:  i = 0;
+
+			}
+		}
+	} 
+	//用户入口
+	public void User() 
+	{
+		int op;
+		int i = 1;
+		System.out.println("=====================用户入口,欢迎使用====================");
+		System.out.println("                  1:查看前面剩余多少位客人");
+		System.out.println("                  2:查看队列情况");
+		System.out.println("                  3:返回主界面");
+		System.out.println("=====================================================");
+		while (i == 1)
+		{
+			System.out.print("请输入要操作的代码：");
+			op=in.nextInt();
+			switch (op)
+			{
+			case 1:CheckRanking();
+				System.out.println();
+				break;
+			case 2:Queueshow();
+				System.out.println();
+				break;
+			case 3:MainInteface();
+				System.out.println();
+				break;
+			default:  i = 0;
+			}
+		}
+	}      
+	//管理员入口
+	public void Manage() 
+	{
+		System.out.println("=====================管理员入口,欢迎使用==================");
+		System.out.println("                   VIP客户输入为1，非VIP输入为0");
+		System.out.println("                  1:餐馆的餐桌，就餐人数赋值");
+		System.out.println("                  2:一名客人进餐馆");
+		System.out.println("                  3:一名客人出餐馆");
+		System.out.println("                  4:查看输出排队情况");
+		System.out.println("                  5:返回主界面");
+		System.out.println("                  6:输出就餐客人的编号");
+		System.out.println("                  7:输出排队的长度");
+		System.out.println("                  0:餐馆营业结束");
+		System.out.println("=========================================================");
+		int op;
+		int i = 1;
+		while (i == 1)
+		{
+			System.out.print("请输入要操作的代码：");
+			op=in.nextInt();
+			switch (op)
+			{
+			case 1:
+				setrepast(0);
+				number = 1;
+				System.out.println("<餐馆的餐桌为8张，就餐人数为0个人>");
+				System.out.println();
+				break;
+			case 2:InRestaurant();
+				System.out.println();
+				break;
+			case 3:OutRestaurant();
+				System.out.println();
+				break;
+			case 4:Queueshow();
+				System.out.println();
+				break;
+			case 5:MainInteface();
+				System.out.println();
+				break;
+			case 6:display();
+				System.out.println();
+				break;
+			case 7:Showlen();
+				break;
+			case 0:
+				setrepast(0);
+				queue();
+				System.out.println();
+				i = 0;
+				break;
+			default:  i = 0;
+			}
+		}
+	}                     
+	
+}
+public class Test {
+	public static void main(String[] args) {
+		Queue_up test=new Queue_up();
+		test.MainInteface();
+	}
+
+}
